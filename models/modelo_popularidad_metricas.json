@@ -1,0 +1,33 @@
+{
+  "modelo": "HistGradientBoosting",
+  "semilla": 42,
+  "umbral_hit": 70,
+  "variables": [
+    "danceability",
+    "energy",
+    "loudness",
+    "speechiness",
+    "acousticness",
+    "instrumentalness",
+    "liveness",
+    "valence",
+    "tempo",
+    "duration_ms",
+    "mode",
+    "explicit",
+    "key",
+    "time_signature",
+    "gen_* (multi-hot, 114 géneros)"
+  ],
+  "metricas_test": {
+    "R² test": 0.412,
+    "MAE test": 11.0803,
+    "RMSE test": 15.6926
+  },
+  "kpis_negocio_top5": {
+    "Precisión@5%": 15.135,
+    "Lift vs azar": 4.452,
+    "Recall@5%": 22.241,
+    "Hits por 100 promovidas": 15.135
+  }
+}
