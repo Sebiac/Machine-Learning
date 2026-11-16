@@ -10,3 +10,4 @@ joblib==1.6.0
 # Para abrir y ejecutar el notebook
 notebook
 ipython
+Acceso a google colab
