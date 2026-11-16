@@ -1,188 +1,67 @@
-# 🎵 Inteligencia Musical y Predicción de Popularidad en Spotify
+# 🎵 Spotify Tracks – Proyecto de Machine Learning (EP2 + EP3)
 
-**Curso:** Machine Learning (MLY1101) · **Evaluación Parcial N°2** · **Caso C – Spotify Tracks**
-**Grupo 5:** Diego Marambio · Sebastián Álvarez · Álvaro Sepúlveda · Erick Rosales
+**Asignatura:** MLY1101 – Machine Learning
+**Caso:** C – Inteligencia musical y predicción de popularidad
+**Grupo:** 5 – Diego Marambio, Sebastián Álvarez, Álvaro Sepúlveda y Erick Rosales
+**Repositorio:** <https://github.com/Sebiac/Machine-Learning>
 
-> Informe técnico reproducible. El desarrollo completo (código, explicaciones e interpretaciones) está en [`notebooks/Informe_Tecnico.ipynb`](notebooks/Informe_Tecnico.ipynb); este README resume el proyecto.
+Este proyecto conserva el trabajo de la EP2 (EDA, modelos, K-Means, sesgos) y agrega la EP3: **optimización de hiperparámetros, ensambles, validación cruzada agrupada y selección justificada de la solución final**. El informe completo está en [`Informe_Tecnico_EP3.md`](Informe_Tecnico_EP3.md).
 
----
+## Problema de negocio
 
-## 1. Descripción del problema de negocio
+¿Pueden las características de una canción (audio y género) ayudar a un equipo de A&R a priorizar qué temas evaluar para promoción? La variable objetivo es `popularity` (0–100), un índice propio de Spotify; no mide calidad artística ni demuestra causalidad. Un *hit* es una canción con `popularity ≥ 70`.
 
-Los sellos discográficos y equipos de **A&R** deben decidir en qué canciones invertir su presupuesto de promoción entre miles de lanzamientos, hoy con criterios subjetivos.
+## Resultados de la EP3 (una sola ejecución del notebook)
 
-> **¿Pueden las características de una canción (audio, género y metadatos) ayudar a priorizar qué temas promocionar, es decir, anticipar cuáles tienen más probabilidad de ser populares en Spotify?**
-
-## 2. Objetivos del proyecto
-
-**General.** Aplicar el ciclo completo de CRISP-DM al *Spotify Tracks Dataset* para cuantificar en qué medida las características de una canción explican su popularidad, comparar modelos supervisados y no supervisados, y traducir los resultados en recomendaciones honestas para A&R.
-
-**Específicos.**
-1. Limpiar y consolidar el dataset a nivel de canción única, sin fuga de datos.
-2. Cuantificar la relación entre atributos de audio/género y la popularidad.
-3. Comparar al menos dos modelos supervisados frente a un *baseline*.
-4. Descubrir segmentos de canciones con una técnica no supervisada.
-5. Entregar recomendaciones, límites y riesgos para el negocio.
-
-## 3. Definición de KPIs
-
-*Hit* = canción con `popularity ≥ 70`.
-
-| Tipo | KPI | Meta | Resultado | Estado |
-|---|---|---|---|---|
-| Técnico | MAE (test) | ≤ 12 puntos | **11,08** | ✅ |
-| Técnico | Mejora de MAE vs. baseline | ≥ 25% | **35,1%** | ✅ |
-| Técnico | R² (test) | ≥ 0,30 | **0,412** | ✅ |
-| Negocio | Precisión@5% (regresor HGB) | ≥ 15% | **15,1%** (azar: 3,4%) | ✅ (margen estrecho) |
-| Negocio | Lift vs. azar | ≥ 3× | **4,5×** | ✅ |
-| Negocio | Precisión@5% (clasificador de hits) | ≥ 15% | **29,5%** (lift 8,7×; recall 43%) | ✅ |
-
-*Precisión@5%: proporción de hits reales entre el 5% de canciones mejor puntuadas por el modelo.* La meta original del EP1 (precisión ≥ 40%) **no se alcanza** y las metas técnicas del EP1 (R² ≥ 0,85; MAE < 5,5) se descartaron por inalcanzables (ver sección 7).
-
-## 4. Fuentes de datos
-
-- **Archivo:** `data/Spotify_Tracks_Dataset.csv` — 114.000 filas × 21 columnas con atributos de audio equivalentes a los de la API Web de Spotify, metadatos y género.
-- **Variable objetivo:** `popularity` (0–100), índice **propietario de Spotify**.
-- **Origen:** conjunto público de Kaggle. ⚠️ *Completar: enlace de descarga y fecha de acceso.*
-- **Herramientas:** Python (pandas, scikit-learn, matplotlib, seaborn), Jupyter/Colab y GitHub. ⚠️ *Completar: enlace al repositorio.*
-
-## 5. Preparación y análisis exploratorio (EDA)
-
-**Preparación (114.000 → 89.583 canciones únicas):**
-
-| Etapa | Filas |
+| | |
 |---|---|
-| Dataset original | 114.000 |
-| Sin duplicados exactos (−450) | 113.550 |
-| Sin filas con nulos (−1) | 113.549 |
-| Sin `tempo = 0` (−157) | 113.392 |
-| **Canciones únicas por `track_id`** (−23.809) | **89.583** |
+| Datos | 89.583 canciones únicas, 114 géneros; 71.727 de entrenamiento y 17.856 de prueba; 0 grupos compartidos |
+| **Regresor elegido** | HistGradientBoosting con pérdida de error absoluto: **MAE 10,12** en prueba (IC 95%: 9,85–10,42); validación cruzada 10,34 ± 0,10 |
+| **Clasificador elegido** | HistGradientBoosting ajustado: **Precisión@5% 30,0%** (IC 27,1–33,1; azar 3,4%), lift 8,8×, PR-AUC 0,304 |
+| Ensambles | *Voting* (MAE 10,69) y *stacking* (10,18) **no mejoran** al HGB solo (10,12) |
+| Aporte del audio | Sobre el baseline por género, el modelo mejora 16,0%; sobre un HGB que solo usa género, 1,5% |
+| Generalización | Brecha entrenamiento–prueba de 0,7; con artistas nuevos el MAE sube a 10,72 |
 
-- `time_signature` 0 o 1 (1.130 filas) se imputa a 4/4.
-- Una canción aparece en varios géneros → se consolida una fila por canción y el **género se codifica *multi-hot***.
-- Otro 9,5% son versiones con distinto `track_id` → la partición *train/test* es **por grupos** (artista + nombre): 0 canciones compartidas entre entrenamiento y prueba (una partición aleatoria simple dejaría 13,2% de fuga).
+## Qué incluye la EP3
 
-**Hallazgos del EDA**
+- `RandomizedSearchCV` para Random Forest y HGB (incluida la función de pérdida), grilla fina para Ridge y un refinamiento posterior del HGB, todo sobre el 100% del entrenamiento.
+- `GroupKFold` (3 pliegues para buscar, 5 para comparar) con grupos artista + nombre de canción.
+- Ensambles: Random Forest (*bagging*), HGB (*boosting*), `VotingRegressor` y `StackingRegressor` con un meta-modelo que minimiza el MAE.
+- Generalización: brecha entrenamiento–prueba, curva de aprendizaje, validación agrupada por artista e intervalos de confianza por *bootstrap* de grupos.
+- Selección con regla de 1 error estándar, comparación contra el baseline por género y clasificador de hits.
+- Preprocesamiento dentro de `Pipeline` para evitar fuga de información.
 
-| Hallazgo | Evidencia |
-|---|---|
-| Los hits son raros | Solo **3,48%** de las canciones tienen popularidad ≥ 70 |
-| El audio, por sí solo, no explica la popularidad | Ninguna variable supera \|r\| = 0,13 (la mayor: `instrumentalness`, −0,129) |
-| Los ceros de popularidad son sospechosos | 10,4% de las canciones; 7 géneros tienen > 50% de ceros (jazz 68%, rock 53%…) |
-| El contenido explícito se asocia a más hits | 7,3% vs. 3,1% (probablemente un efecto del género, no causal) |
-| El ranking de artistas necesita un mínimo | Sin filtro lidera un artista con 1 canción; con ≥ 10 canciones califica solo el 9% de los artistas |
+## Estructura
 
-![Correlaciones](images/03_correlaciones.png)
-
-## 6. Metodología (CRISP-DM)
-
-| Fase | Qué se hizo | Sección del notebook |
-|---|---|---|
-| 1. Comprensión del negocio | Problema, objetivos SMART, KPIs técnicos y de negocio | 1 y 2 |
-| 2. Comprensión de los datos | Diagnóstico de calidad y EDA narrativo | 3 y 5 |
-| 3. Preparación de los datos | Limpieza, consolidación por canción, *multi-hot*, partición por grupos, `Pipeline` | 4 y 7 |
-| 4. Modelado | 3 regresores + *baseline* + clasificador de hits (supervisado) y K-Means (no supervisado) | 8 y 9 |
-| 5. Evaluación | KPIs, ablación, sensibilidad a ceros, equidad por género | 10 |
-| 6. Despliegue | Modelo guardado (`models/`) y recomendaciones | 11 |
-| Transversal | Sesgos, ética y privacidad | 6 |
-
-## 7. Resultados
-
-### Modelos supervisados (regresión de `popularity`, conjunto de prueba)
-
-| Modelo | R² | MAE | RMSE | Mejora MAE vs. baseline |
-|---|---|---|---|---|
-| Baseline (media) | 0,00 | 17,09 | 20,46 | — |
-| Ridge | 0,365 | 11,72 | 16,31 | 31,4% |
-| Random Forest | 0,260 | 13,89 | 17,61 | 18,7% |
-| **HistGradientBoosting** | **0,412** | **11,08** | **15,69** | **35,1%** |
-
-Hiperparámetros elegidos por validación cruzada agrupada (`GroupKFold`, 3 pliegues) solo con datos de entrenamiento. HGB es el mejor en todas las métricas (MAE y R² en prueba, validación cruzada y Precisión@5%); Ridge es la alternativa interpretable.
-
-**Qué explica la popularidad (ablación con HGB):**
-
-| Variables usadas | R² test | MAE test |
-|---|---|---|
-| Solo audio + metadatos musicales | 0,108 | 15,36 |
-| Solo género | 0,394 | 11,13 |
-| Audio + género | 0,412 | 11,08 |
-
-El género domina; el audio agrega muy poco. Esto no implica causalidad: en este dataset el género está mezclado con los sesgos de la fuente.
-
-### KPIs de negocio (promover el 5% mejor puntuado)
-
-| Estrategia | Precisión@5% | Lift | Recall@5% |
-|---|---|---|---|
-| Elegir al azar | 4,2% | 1,2× | 6,1% |
-| Random Forest | 8,9% | 2,6× | 13,0% |
-| Ridge | 11,3% | 3,3× | 16,6% |
-| HGB (regresión) | 15,1% | 4,5× | 22,2% |
-| **Clasificador de hits (HGB)** | **29,5%** | **8,7×** | **43,3%** |
-
-![KPI de negocio](images/09_kpi_negocio.png)
-
-### Modelo no supervisado (K-Means, k = 4, sobre variables de audio)
-
-Estabilidad entre semillas ARI = 0,83; silueta = 0,158 (estructura débil: los perfiles tienen bordes difusos).
-
-| Segmento | Perfil | Canciones | Tasa de hits |
-|---|---|---|---|
-| 0. Acústico / ambiental | energy 0,27; acousticness 0,78 | 21% | 1,7% |
-| 1. Intenso (rock / metal) | energy 0,80; loudness −6,2 dB | 34% | 2,7% |
-| 2. Hablado / comedia | speechiness 0,82 | 1% | 0,5% |
-| 3. Bailable y positivo | danceability 0,68; valence 0,67 | 44% | **5,0%** |
-
-Los segmentos explican < 1% de la varianza de la popularidad (η² = 0,008): sirven para *benchmarking* y organización del catálogo, no para predecir éxito.
-
-![Segmentos](images/12_perfil_clusters.png)
-
-## 8. Interpretación y recomendaciones para el negocio
-
-1. **Usar el modelo como filtro de priorización, no como decisor.** El 5% mejor puntuado por el clasificador contiene ~29% de hits (vs. ~3% al azar), pero ~7 de cada 10 canciones promovidas no serán hits.
-2. **No leer la popularidad predicha como valor esperado:** el regresor comprime hacia la media y subestima los hits en ~34 puntos.
-3. **No invertir en "sonar como un hit":** el audio explica poco. Mejorar la predicción requiere variables hoy ausentes (audiencia del artista, promoción, *playlists*).
-4. **Comparar canciones dentro del mismo género o segmento**, porque el puntaje no es comparable entre géneros.
-5. **Validar `popularity` con datos propios** de la empresa y aclarar qué significa un 0 antes de pasar a producción.
-
-## 9. Sesgos, ética y privacidad
-
-- **Sesgo de la fuente (el principal):** `popularity` es una métrica propietaria de Spotify que refleja lo que la plataforma promueve; el modelo aprende a reproducir esas decisiones, no a medir calidad musical.
-- **Sesgo de selección:** los 114 géneros tienen exactamente 1.000 canciones; no es una muestra representativa del mercado.
-- **Datos faltantes:** los ceros se concentran en ciertos géneros y probablemente son en parte un artefacto de la fuente.
-- **Sesgo de popularidad previa:** favorece lo que ya funciona sobre el talento emergente.
-- **Ética:** el modelo es apoyo a la decisión; no debe usarse para descartar artistas o géneros, y se recomienda reservar cupos de promoción fuera del *top* para evitar la homogeneización.
-- **Privacidad:** los nombres de artistas son datos personales de personas reales; el modelo **no los usa** como variable. Marco de referencia: Ley 19.628 y Ley 21.719 (Chile) y GDPR; el uso comercial debe respetar los términos de la API de Spotify.
-
-## 10. Limitaciones
-
-Variable objetivo propietaria y circular · dataset sin fecha de extracción · ceros sin verificar · sin variables de artista/promoción · hiperparámetros en el borde de la grilla · sin intervalos de confianza · segmentos con silueta baja.
-
-## 11. Estructura del proyecto y cómo reproducirlo
-
-```
-EVA02/
-├── data/
-│   └── Spotify_Tracks_Dataset.csv
+```text
+Machine-Learning/
+├── data/Spotify_Tracks_Dataset.csv
 ├── notebooks/
-│   └── Informe_Tecnico.ipynb      ← informe técnico completo y ejecutable
-├── images/                        ← gráficos generados por el notebook
-├── models/
-│   ├── modelo_popularidad.joblib
-│   └── modelo_popularidad_metricas.json
+│   ├── Informe_Tecnico_EP3.ipynb              # notebook de la EP3 (ejecutado)
+│   └── Informe_Tecnico_EP2_Referencia.ipynb   # EDA, sesgos, K-Means y modelos de la EP2
+├── src/modelos_ep3.py                         # baseline por género y meta-modelo de stacking
+├── images/                                    # gráficos (01–12 EP2, 13–17 EP3)
+├── models/                                    # modelos entrenados y métricas
+├── Informe_Tecnico_EP3.md
 ├── requirements.txt
 └── README.md
 ```
 
+## Cómo ejecutar
+
 ```bash
-pip install -r requirements.txt
-jupyter notebook notebooks/Informe_Tecnico.ipynb     # Kernel → Restart & Run All
+python -m pip install -r requirements.txt
+jupyter notebook notebooks/Informe_Tecnico_EP3.ipynb
 ```
 
-El notebook completo se ejecuta en menos de 10 minutos (semilla fija `random_state=42`). En Google Colab: subir el CSV a `data/` (o clonar el repositorio) y usar *Entorno de ejecución → Reiniciar y ejecutar todo*.
+Ejecutar **Restart & Run All**. El notebook detecta solo la ruta del CSV, ya sea que se abra desde `notebooks/` o desde la raíz. Tarda ≈ 32 minutos en un solo núcleo; con `MODO_RAPIDO = True` (primera celda de código) corre en pocos minutos con datos submuestreados, solo para comprobar que el flujo funciona. En Google Colab, clonar el repositorio completo para conservar las rutas relativas.
 
-**Cargar el modelo entrenado:**
-```python
-import joblib
-modelo = joblib.load("models/modelo_popularidad.joblib")
-# modelo.predict(X)  # X con las mismas columnas que se usaron al entrenar (ver el notebook, sección 7)
-```
+## Archivos generados por la EP3
+
+- `models/modelo_final_regresor.joblib` y `models/modelo_final_clasificador.joblib` (*pipelines* completos, se cargan con `joblib.load`)
+- `models/modelo_final_metricas.json` (hiperparámetros y métricas) y `models/resultados_ep3.csv` (comparación de modelos)
+- `images/13_ep3_comparacion_mae.png` a `images/17_ep3_curva_aprendizaje.png`
+
+## Limitaciones
+
+El dataset tiene una distribución artificialmente balanceada por género, ceros de popularidad de interpretación incierta y fecha de publicación 2023; no contiene promoción, alcance del artista, *playlists* ni fecha de lanzamiento. Las particiones agrupan por canción, no por artista, por lo que las cifras son algo optimistas para artistas nuevos. El modelo es un apoyo para priorizar el análisis humano, nunca para excluir artistas o géneros automáticamente.

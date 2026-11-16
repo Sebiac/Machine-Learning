@@ -1,0 +1,56 @@
+{
+  "regresor_final": "HGB",
+  "clasificador_final": "HGB (búsqueda EP3)",
+  "semilla": 42,
+  "umbral_hit": 70,
+  "entrenamiento_canciones": 71727,
+  "hiperparametros": {
+    "ridge": {
+      "alpha": 0.01
+    },
+    "random_forest": {
+      "min_samples_leaf": 3,
+      "max_features": 0.5,
+      "max_depth": null
+    },
+    "hgb_regresor": {
+      "l2_regularization": 0.07476312062252301,
+      "learning_rate": 0.12273661723331354,
+      "loss": "absolute_error",
+      "max_features": 0.8,
+      "max_iter": 200,
+      "max_leaf_nodes": 61,
+      "min_samples_leaf": 70
+    },
+    "hgb_clasificador": {
+      "class_weight": null,
+      "l2_regularization": 2.4526126311336767,
+      "learning_rate": 0.04576737927013718,
+      "max_iter": 100,
+      "max_leaf_nodes": 35,
+      "min_samples_leaf": 122
+    }
+  },
+  "mae_cv": {
+    "Baseline: media global": 17.2858,
+    "Baseline: media por género": 12.3031,
+    "HGB solo género": 10.5424,
+    "Ridge": 11.9137,
+    "Random Forest": 11.2192,
+    "HGB": 10.3389,
+    "Voting (promedio)": 10.9286,
+    "Stacking (meta MAE)": 10.4035
+  },
+  "metricas_test_regresor": {
+    "MAE": 10.118,
+    "R2": 0.366,
+    "RMSE": 16.296
+  },
+  "metricas_test_clasificador": {
+    "Precision@5%": 30.04,
+    "Lift": 8.84,
+    "Recall@5%": 44.15,
+    "PR_AUC": 0.304,
+    "ROC_AUC": 0.909
+  }
+}
